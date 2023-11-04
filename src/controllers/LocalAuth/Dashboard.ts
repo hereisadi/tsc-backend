@@ -18,12 +18,13 @@ export const dashboard = async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const { name, email, role, isVerified } = user;
+      const { name, email, role, isVerified, is2faEnabled } = user;
       res.status(200).json({
         name,
         email,
         role,
         isVerified,
+        is2faEnabled,
       });
     } catch (error) {
       CError("Failed to load user details");

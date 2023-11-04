@@ -9,6 +9,7 @@ type UserDocument = Document & {
   token: string | undefined;
   tokenExpiresAt: string | undefined;
   isVerified: boolean;
+  is2faEnabled: boolean;
 };
 
 const userSchema = new mongoose.Schema<UserDocument>({
@@ -40,6 +41,10 @@ const userSchema = new mongoose.Schema<UserDocument>({
     default: undefined,
   },
   isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  is2faEnabled: {
     type: Boolean,
     default: false,
   },

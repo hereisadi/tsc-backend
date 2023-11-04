@@ -8,6 +8,8 @@ dotEnv.config();
 
 import rateLimit from "express-rate-limit";
 import { isEmail } from "../../utils/isEmail";
+import { sendEmail } from "../../utils/EmailService";
+import { twoFA } from "../../models/LocalAuth/2faotp/otp";
 
 const YOUR_SECRET_KEY = process.env.JWT_SECRET_KEY as string;
 
@@ -44,20 +46,67 @@ export const login = async (req: Request, res: Response) => {
         if (!user) {
           return res.status(401).json({ error: "No account found" });
         }
+        if (user.is2faEnabled === false) {
+          const passwordMatch = await bcrypt.compare(password, user.password);
+          if (!passwordMatch) {
+            return res.status(401).json({ error: "Invalid email or password" });
+          }
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) {
-          return res.status(401).json({ error: "Invalid email or password" });
+          const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            YOUR_SECRET_KEY!,
+            { expiresIn: "720h" }
+          );
+
+          res.status(200).json({ message: "Login successful", token });
+          CSuccess("login successful");
+        } else {
+          const passwordMatch = await bcrypt.compare(password, user.password);
+          if (!passwordMatch) {
+            return res.status(401).json({ error: "Invalid email or password" });
+          } else {
+            const otp = Math.floor(100000 + Math.random() * 900000);
+            const OTP = otp.toString().trim();
+            sendEmail(user.email, `[OTP] 2FA `, `Your 2FA OTP is ${OTP}`);
+            await twoFA.findOneAndUpdate(
+              { email: user.email },
+              { otp: OTP },
+              { upsert: true }
+            );
+            const otpData = await twoFA.findOne({ email }).exec();
+            if (!otpData) {
+              return res
+                .status(400)
+                .json({ error: "no otp has been generated, Login failed" });
+            } else {
+              const { enteredOtp } = req.body as {
+                enteredOtp: string;
+              };
+              const enteredOTP = enteredOtp.trim();
+              const storedOTP = otpData.otp?.trim();
+              // console.log(storedOTP)
+              // console.log(enteredOTP)
+              if (enteredOTP !== storedOTP) {
+                return res
+                  .status(400)
+                  .json({ error: "Invalid OTP, Login failed" });
+              } else {
+                await twoFA.findOneAndUpdate(
+                  { email: user.email },
+                  { otp: undefined },
+                  { upsert: true }
+                );
+                const token = jwt.sign(
+                  { userId: user._id, email: user.email },
+                  YOUR_SECRET_KEY!,
+                  { expiresIn: "720h" }
+                );
+                res.status(200).json({ message: "Login successful", token });
+                CSuccess("login successful");
+              }
+            }
+          }
         }
-
-        const token = jwt.sign(
-          { userId: user._id, email: user.email },
-          YOUR_SECRET_KEY!,
-          { expiresIn: "720h" }
-        );
-
-        res.status(200).json({ message: "Login successful", token });
-        CSuccess("login successful");
       } catch (error) {
         CError("Failed to log in");
         res.status(500).json({ error: "Failed to log in" });

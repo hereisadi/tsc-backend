@@ -47,6 +47,10 @@ export const sendResetPwdLink = async (req: Request, res: Response) => {
         " Reset Password",
         `Click on this link to reset your password: ${verifyEmailLink} \n Link is valid for 60 minutes`
       );
+
+      res
+        .status(200)
+        .json({ success: true, message: "reset link sent sucessfully" });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Server Error", success: false });

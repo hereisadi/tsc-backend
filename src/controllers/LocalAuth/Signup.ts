@@ -13,18 +13,16 @@ export const signup = async (req: Request, res: Response) => {
       confirmPassword: string;
     };
 
-    const Semail = email.toString().trim();
-    const Sname = name.toString().trim();
-    const Spassword = password.toString().trim();
-    const SconfirmPassword = confirmPassword.toString().trim();
+    if (!name || !email || !password || !confirmPassword) {
+      return res.status(400).json({ error: "Please fill all required fields" });
+    }
+
+    const Semail = email.trim();
+    const Sname = name.trim();
+    const Spassword = password.trim();
+    const SconfirmPassword = confirmPassword.trim();
 
     try {
-      if (!Sname || !Semail || !Spassword || !SconfirmPassword) {
-        return res
-          .status(400)
-          .json({ error: "Please fill all required fields" });
-      }
-
       if (Spassword.length < 8) {
         return res
           .status(400)

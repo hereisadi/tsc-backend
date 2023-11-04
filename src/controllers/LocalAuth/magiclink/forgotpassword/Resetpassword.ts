@@ -10,15 +10,15 @@ export const resetPwd = async (req: Request, res: Response) => {
       newpwd: string;
       cnewpwd: string;
     };
-    const Token = token.trim();
-    const newPwd = newpwd.trim();
-    const newCPwd = cnewpwd.trim();
 
-    if (!Token || !newPwd || !newCPwd) {
+    if (!token || !newpwd || !cnewpwd) {
       return res.status(400).json({
         error: "payload is missing",
       });
     }
+    const Token = token.trim();
+    const newPwd = newpwd.trim();
+    const newCPwd = cnewpwd.trim();
 
     const user = await User.findOne({
       token: Token,

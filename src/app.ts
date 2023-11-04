@@ -4,6 +4,7 @@ import cors from "cors";
 import dotEnv from "dotenv";
 import ApiRoutes from "./routes/ApiRoutes";
 import redirect from "./middlewares/Redirect";
+import connectToDb from "./config/db";
 const app = express();
 
 dotEnv.config();
@@ -11,7 +12,7 @@ dotEnv.config();
 app.use(express.json());
 app.use(cors());
 redirect;
-
+connectToDb();
 app.use("/v1/api", ApiRoutes);
 
 export default app;
