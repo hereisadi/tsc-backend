@@ -42,7 +42,7 @@ This template can be used as a boiler plate for building a backend nodejs applic
 - Register new user with email
 
 ```
-Method: post
+Method: POST
 Type: public
 Route:
 /v1/api/signup
@@ -52,7 +52,7 @@ payload: name && email && password && confirmPassword (subject to change)
 - Login user with email
 
 ```
-Method: post
+Method: POST
 Type: public
 Route:
 /v1/api/login
@@ -98,7 +98,7 @@ payload : newName || newPwd || confirmNewPwd (subject to change)
 
 ```
 
-- Send Reset Password Link
+- Reset Password
 
 ```
 Method: POST
