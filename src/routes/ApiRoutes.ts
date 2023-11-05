@@ -10,6 +10,7 @@ import { verifyEmail } from "../controllers/LocalAuth/magiclink/verifyemail/Veri
 import { sendResetPwdLink } from "../controllers/LocalAuth/magiclink/forgotpassword/sendresetpasswordlink";
 import { resetPwd } from "../controllers/LocalAuth/magiclink/forgotpassword/Resetpassword";
 import { toggle2fa } from "../controllers/LocalAuth/2fa/toggle2fa";
+import { verify2faOtp } from "../controllers/LocalAuth/2fa/verify2faotp";
 
 const router = express.Router();
 
@@ -47,4 +48,6 @@ const twoFaHandler = (req: Request, res: Response) => {
 };
 router.put("/toggle2fa", twoFaHandler);
 
+//2fa
+router.post("/verify2faotp", verify2faOtp);
 export default router;

@@ -5,6 +5,7 @@ import { CError, CSuccess } from "../../utils/ChalkCustomStyles";
 import jwt from "jsonwebtoken";
 import dotEnv from "dotenv";
 dotEnv.config();
+import moment from "moment-timezone";
 
 import rateLimit from "express-rate-limit";
 import { isEmail } from "../../utils/isEmail";
@@ -68,43 +69,55 @@ export const login = async (req: Request, res: Response) => {
             const otp = Math.floor(100000 + Math.random() * 900000);
             const OTP = otp.toString().trim();
             sendEmail(user.email, `[OTP] 2FA `, `Your 2FA OTP is ${OTP}`);
+            const otpExpiresAt = moment
+              .tz("Asia/Kolkata")
+              .add(10, "minutes")
+              .format("DD-MM-YY h:mma") as string;
             await twoFA.findOneAndUpdate(
               { email: user.email },
-              { otp: OTP },
+              { otp: OTP, otpExpiresAt: otpExpiresAt },
               { upsert: true }
             );
-            const otpData = await twoFA.findOne({ email }).exec();
-            if (!otpData) {
-              return res
-                .status(400)
-                .json({ error: "no otp has been generated, Login failed" });
-            } else {
-              const { enteredOtp } = req.body as {
-                enteredOtp: string;
-              };
-              const enteredOTP = enteredOtp.trim();
-              const storedOTP = otpData.otp?.trim();
-              // console.log(storedOTP)
-              // console.log(enteredOTP)
-              if (enteredOTP !== storedOTP) {
-                return res
-                  .status(400)
-                  .json({ error: "Invalid OTP, Login failed" });
-              } else {
-                await twoFA.findOneAndUpdate(
-                  { email: user.email },
-                  { otp: undefined },
-                  { upsert: true }
-                );
-                const token = jwt.sign(
-                  { userId: user._id, email: user.email },
-                  YOUR_SECRET_KEY!,
-                  { expiresIn: "720h" }
-                );
-                res.status(200).json({ message: "Login successful", token });
-                CSuccess("login successful");
-              }
-            }
+
+            res
+              .status(200)
+              .json({
+                message: "Proceed to verify otp page",
+                userEmail: user.email,
+              });
+            // const otpData = await twoFA.findOne({ email }).exec();
+            // if (!otpData) {
+            //   return res
+            //     .status(400)
+            //     .json({ error: "no otp has been generated, Login failed" });
+            // } else {
+
+            //   const { enteredOtp } = req.body as {
+            //     enteredOtp: string;
+            //   }; // this gonna be empty as we are not sending it from frontend as soon as we send otp to user's email
+            // const enteredOTP = enteredOtp.trim();
+            // const storedOTP = otpData.otp?.trim();
+            //   // console.log(storedOTP)
+            //   // console.log(enteredOTP)
+            //   if (enteredOTP !== storedOTP) {
+            //     return res
+            //       .status(400)
+            //       .json({ error: "Invalid OTP, Login failed" });
+            //   } else {
+            //   await twoFA.findOneAndUpdate(
+            //     { email: user.email },
+            //     { otp: undefined },
+            //     { upsert: true }
+            //   );
+            //   const token = jwt.sign(
+            //     { userId: user._id, email: user.email },
+            //     YOUR_SECRET_KEY!,
+            //     { expiresIn: "720h" }
+            //   );
+            //   res.status(200).json({ message: "Login successful", token });
+            //   CSuccess("login successful");
+            // }
+            // }
           }
         }
       } catch (error) {
